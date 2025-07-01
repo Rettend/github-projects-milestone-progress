@@ -14,14 +14,9 @@ function createProgressBar(completed: number, total: number): HTMLElement {
   // These class names are based on GitHub's internal CSS and might change.
   container.className = 'progress-bar-module__containerSegmented--IwcYh milestone-progress-bar'
   container.style.marginLeft = '8px'
-  container.style.minWidth = '120px' // Give it some space
-
-  const count = document.createElement('span')
-  count.className = 'progress-bar-module__textCount--FR2FW'
-  // GitHub hides this element for edge cases (0 % and 100 %) using internal CSS.
-  // Adding an explicit display override guarantees it is always shown.
-  count.style.display = 'inline'
-  count.textContent = `${completed} / ${total}`
+  // Using flex properties gives us more control over the layout and
+  // prevents the progress bar from pushing the title too much.
+  container.style.flex = '0 1 120px'
 
   const segmentedBar = document.createElement('span')
   segmentedBar.className = 'progress-bar-module__segmented--MfASq prc-ProgressBar-ProgressBarContainer-E-z8S'
@@ -41,7 +36,6 @@ function createProgressBar(completed: number, total: number): HTMLElement {
   percentage.className = 'progress-bar-module__textPercentage--pzQK8'
   percentage.textContent = total > 0 ? `${Math.round((completed / total) * 100)}%` : '0%'
 
-  container.appendChild(count)
   container.appendChild(segmentedBar)
   container.appendChild(percentage)
 
@@ -102,6 +96,20 @@ function addProgressBars() {
     const progressBar = createProgressBar(completedIssues, totalIssues)
     injectionPoint.appendChild(progressBar)
     console.log(`[M-P] Injected/updated progress bar for group ${index}.`)
+
+    const counter = header.querySelector('span.prc-CounterLabel-CounterLabel-ZwXPe') as HTMLElement | null
+    if (counter) {
+      // Preserve the original total once so we don't keep prefixing our "x /" part on every refresh.
+      let originalTotal = counter.dataset.originalTotal
+      if (!originalTotal) {
+        originalTotal = counter.textContent?.trim() ?? ''
+        counter.dataset.originalTotal = originalTotal
+      }
+
+      counter.textContent = `${completedIssues} / ${originalTotal}`
+      // Ensure the pill doesn't wrap onto multiple lines when the numerator grows.
+      counter.style.whiteSpace = 'nowrap'
+    }
   })
 
   // Reconnect the observer once we're done.
