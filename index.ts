@@ -18,17 +18,20 @@ function createProgressBar(completed: number, total: number): HTMLElement {
 
   const count = document.createElement('span')
   count.className = 'progress-bar-module__textCount--FR2FW'
+  // GitHub hides this element for edge cases (0 % and 100 %) using internal CSS.
+  // Adding an explicit display override guarantees it is always shown.
+  count.style.display = 'inline'
   count.textContent = `${completed} / ${total}`
 
   const segmentedBar = document.createElement('span')
-  segmentedBar.className = 'progress-bar-module__segmented--MfASq'
+  segmentedBar.className = 'progress-bar-module__segmented--MfASq prc-ProgressBar-ProgressBarContainer-E-z8S'
+  segmentedBar.setAttribute('data-progress-display', 'inline')
+  segmentedBar.setAttribute('data-progress-bar-size', 'default')
 
   for (let i = 0; i < total; i++) {
     const barItem = document.createElement('span')
-    // This base class seems to be required for all segments to be visible.
-    barItem.className = 'progress-bar-module__barItem--Aj2mo'
+    barItem.className = 'progress-bar-module__barItem--Aj2mo prc-ProgressBar-ProgressBarItem-stL6O'
     if (i < completed) {
-      // This class name is for completed items.
       barItem.classList.add('progress-bar-module__barItemComplete--Ro6h2')
     }
     segmentedBar.appendChild(barItem)
@@ -78,9 +81,9 @@ function addProgressBars() {
     let completedIssues = 0
 
     issueRows.forEach((row) => {
-      // Use the data-status-id for a more reliable "Done" check.
-      const statusToken = row.querySelector('[data-status-id="done"]')
-      if (statusToken) {
+      // Determine completion via closed icon in title cell
+      const closedIcon = row.querySelector('svg.octicon-issue-closed, svg[aria-label^="Closed"]')
+      if (closedIcon) {
         completedIssues++
       }
     })
