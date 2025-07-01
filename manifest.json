@@ -2,10 +2,20 @@
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "manifest_version": 3,
   "version": "0.0.1",
-  "name": "my-extension",
-  "description": "An Extension.js example.",
+  "name": "GitHub Projects Milestone Progress",
+  "description": "Displays a progress bar for milestones in GitHub Projects.",
   "icons": {
     "48": "images/extension_48.png"
   },
-  "author": "Your Name"
+  "author": "Rettend",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*/*/projects/*"
+      ],
+      "js": [
+        "index.ts"
+      ]
+    }
+  ]
 }
