@@ -87,6 +87,7 @@ function createProgressBar(completed: number, total: number): HTMLElement {
 }
 
 let observer: MutationObserver
+const milestoneIssuesStateCache = new Map<string, Map<string, boolean>>()
 
 function addProgressBars() {
   observer.disconnect()
@@ -94,44 +95,52 @@ function addProgressBars() {
   const groupHeaders = document.querySelectorAll('div.table-group-module__Box--F3vEc')
 
   groupHeaders.forEach((header) => {
+    const titleContainer = header.querySelector<HTMLElement>('.hYSjTM')
+    if (!titleContainer)
+      return
+
+    const milestoneTitle = titleContainer.textContent?.trim() ?? ''
+    if (!milestoneIssuesStateCache.has(milestoneTitle))
+      milestoneIssuesStateCache.set(milestoneTitle, new Map<string, boolean>())
+
+    const issuesStateForMilestone = milestoneIssuesStateCache.get(milestoneTitle)!
+
     const counter = header.querySelector<HTMLElement>('span.prc-CounterLabel-CounterLabel-ZwXPe')
     const realTotalEl = counter?.nextElementSibling
 
-    if (!counter || !realTotalEl || !realTotalEl.textContent) {
+    if (!counter || !realTotalEl || !realTotalEl.textContent)
       return
-    }
 
     const totalMatch = realTotalEl.textContent.match(/\d+/)
-    if (!totalMatch) {
+    if (!totalMatch)
       return
-    }
+
     const totalIssues = Number.parseInt(totalMatch[0], 10)
 
     const rowGroup = header.closest('[role="rowgroup"]')
     if (!rowGroup)
       return
 
-    const issueRows = rowGroup.querySelectorAll('[role="row"][data-hovercard-subject-tag^="issue:"]')
-    let completedIssues = 0
-
     if (totalIssues === 0) {
-        const existingBar = header.querySelector('.milestone-progress-bar')
-        if (existingBar) {
-          existingBar.remove()
-        }
-        counter.textContent = '0'
-        return
+      const existingBar = header.querySelector('.milestone-progress-bar')
+      if (existingBar)
+        existingBar.remove()
+
+      counter.textContent = '0'
+      return
     }
 
+    const issueRows = rowGroup.querySelectorAll('[role="row"][data-hovercard-subject-tag^="issue:"]')
     issueRows.forEach((row) => {
-      const closedIcon = row.querySelector('svg.octicon-issue-closed, svg[aria-label^="Closed"]')
-      if (closedIcon)
-        completedIssues++
+      const issueId = row.getAttribute('data-hovercard-subject-tag')
+      if (!issueId)
+        return
+
+      const isClosed = !!row.querySelector('svg.octicon-issue-closed, svg[aria-label^="Closed"]')
+      issuesStateForMilestone.set(issueId, isClosed)
     })
 
-    const titleContainer = header.querySelector<HTMLElement>('.hYSjTM')
-    if (!titleContainer)
-      return
+    const completedIssues = [...issuesStateForMilestone.values()].filter(isClosed => isClosed).length
 
     titleContainer.style.flexShrink = '0'
 
