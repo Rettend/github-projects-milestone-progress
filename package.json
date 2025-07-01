@@ -1,0 +1,22 @@
+{
+  "name": "github-projects-milestone-progress",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "bun@1.2.17",
+  "description": "An Extension.js example.",
+  "author": "Rettend",
+  "license": "MIT",
+  "scripts": {
+    "dev": "extension dev",
+    "start": "extension start",
+    "build": "extension build",
+    "lint": "eslint . --fix"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.16.1",
+    "eslint": "^9.29.0",
+    "extension": "^2.0.0-rc.37"
+  }
+}
