@@ -86,46 +86,48 @@ function createProgressBar(completed: number, total: number): HTMLElement {
   return container
 }
 
-// Declare observer so it's in scope for addProgressBars
 let observer: MutationObserver
 
 function addProgressBars() {
-  // Disconnect the observer while we modify the DOM to prevent infinite loops.
   observer.disconnect()
 
-  console.log('[M-P] Running addProgressBars...')
   const groupHeaders = document.querySelectorAll('div.table-group-module__Box--F3vEc')
 
-  if (groupHeaders.length > 0) {
-    console.log(`[M-P] Found ${groupHeaders.length} milestone group headers.`)
-  }
+  groupHeaders.forEach((header) => {
+    const counter = header.querySelector<HTMLElement>('span.prc-CounterLabel-CounterLabel-ZwXPe')
+    const realTotalEl = counter?.nextElementSibling
 
-  groupHeaders.forEach((header, index) => {
+    if (!counter || !realTotalEl || !realTotalEl.textContent) {
+      return
+    }
+
+    const totalMatch = realTotalEl.textContent.match(/\d+/)
+    if (!totalMatch) {
+      return
+    }
+    const totalIssues = Number.parseInt(totalMatch[0], 10)
+
     const rowGroup = header.closest('[role="rowgroup"]')
     if (!rowGroup)
       return
 
     const issueRows = rowGroup.querySelectorAll('[role="row"][data-hovercard-subject-tag^="issue:"]')
-    if (issueRows.length === 0) {
-      const existingBar = header.querySelector('.milestone-progress-bar')
-      if (existingBar) {
-        console.log(`[M-P] Group ${index}: No issues found, removing existing bar.`)
-        existingBar.remove()
-      }
-      return
-    }
-
-    const totalIssues = issueRows.length
     let completedIssues = 0
+
+    if (totalIssues === 0) {
+        const existingBar = header.querySelector('.milestone-progress-bar')
+        if (existingBar) {
+          existingBar.remove()
+        }
+        counter.textContent = '0'
+        return
+    }
 
     issueRows.forEach((row) => {
       const closedIcon = row.querySelector('svg.octicon-issue-closed, svg[aria-label^="Closed"]')
-      if (closedIcon) {
+      if (closedIcon)
         completedIssues++
-      }
     })
-
-    console.log(`[M-P] Group ${index}: ${completedIssues}/${totalIssues} completed.`)
 
     const titleContainer = header.querySelector<HTMLElement>('.hYSjTM')
     if (!titleContainer)
@@ -142,13 +144,9 @@ function addProgressBars() {
     const progressBar = createProgressBar(completedIssues, totalIssues)
 
     titleContainer.after(progressBar)
-    console.log(`[M-P] Injected/updated progress bar for group ${index}.`)
 
-    const counter = header.querySelector('span.prc-CounterLabel-CounterLabel-ZwXPe') as HTMLElement | null
-    if (counter) {
-      counter.textContent = `${completedIssues} / ${totalIssues}`
-      counter.style.whiteSpace = 'nowrap'
-    }
+    counter.textContent = `${completedIssues} / ${totalIssues}`
+    counter.style.whiteSpace = 'nowrap'
   })
 
   observer.observe(document.body, {
